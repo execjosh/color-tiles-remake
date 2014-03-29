@@ -131,8 +131,7 @@ class @Application
 
     return  # void
 
-  onTick: ->
-    now = (new Date()).getTime()
+  onTick: (now) =>
     deltaTime = (now - @_lastTime) * 0.001
 
     if 0.25 < deltaTime
@@ -150,6 +149,8 @@ class @Application
 
     @updateGrafix()
 
+    requestAnimationFrame @onTick
+
     return  # void
 
   setState: (s) ->
@@ -165,17 +166,15 @@ class @Application
     switch trans
       when "#{STATE_INIT}:#{STATE_READY}"
         @generateBoard()
-        @_lastTime = (new Date()).getTime()
-        window.setInterval =>
-          @onTick()
-        , 1000 / FPS
+        @_lastTime = performance.now()
+        requestAnimationFrame @onTick
       when "#{STATE_READY}:#{STATE_GAME}"
         @generateBoard()
         @_countDown = LEVEL_TIME
         @_score = 0
         @_spriteList = []
       when "#{STATE_GAME}:#{STATE_END}"
-        @_gameEnd = (new Date()).getTime()
+        @_gameEnd = performance.now()
         @_spriteList = []
       when "#{STATE_END}:#{STATE_READY}"
         @generateBoard()
@@ -301,7 +300,7 @@ class @Application
                 @_board[hits.south.iy][hits.south.ix] = null
                 @_spriteList.push hits.south.sprite
       when STATE_END
-        now = (new Date()).getTime()
+        now = performance.now()
         deltaTime = (now - @_gameEnd) * 0.001
         if 1 < deltaTime
           @setState STATE_READY
