@@ -1,12 +1,13 @@
 /*!
  * color-tiles-remake - Remake of GameSaien's Color Tiles
- * @version v0.1.0
- * @date Fri, 28 Mar 2014 16:12:44 GMT
+ * @version v0.1.1
+ * @date Sat, 29 Mar 2014 01:44:23 GMT
  * @link https://execjosh.github.io/color-tiles-remake/build/
  * @license ISC
  */
 (function() {
-  var BLOCKS_HIGH, BLOCKS_WIDE, BLOCK_SIZE, COLOR_TABLE, COUNTDOWN_PENALTY, DT, FPS, LEVEL_TIME, MARGIN_BOTTOM, MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, STATE_END, STATE_GAME, STATE_INIT, STATE_NULL, STATE_READY, log;
+  var BLOCKS_HIGH, BLOCKS_WIDE, BLOCK_SIZE, COLOR_TABLE, COUNTDOWN_PENALTY, DT, FPS, LEVEL_TIME, MARGIN_BOTTOM, MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, STATE_END, STATE_GAME, STATE_INIT, STATE_NULL, STATE_READY, log,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   STATE_NULL = 'null';
 
@@ -48,7 +49,8 @@
 
   this.Application = (function() {
     function Application() {
-      this._version = '0.1.0';
+      this.onTick = __bind(this.onTick, this);
+      this._version = '0.1.1';
       this._state = STATE_NULL;
       this._ctx = null;
       this._w = 1;
@@ -147,9 +149,8 @@
       this._mouseY = y;
     };
 
-    Application.prototype.onTick = function() {
-      var deltaTime, now;
-      now = (new Date()).getTime();
+    Application.prototype.onTick = function(now) {
+      var deltaTime;
       deltaTime = (now - this._lastTime) * 0.001;
       if (0.25 < deltaTime) {
         deltaTime = 0.25;
@@ -162,6 +163,7 @@
         this._timeAccumulator -= DT;
       }
       this.updateGrafix();
+      requestAnimationFrame(this.onTick);
     };
 
     Application.prototype.setState = function(s) {
@@ -171,12 +173,8 @@
       switch (trans) {
         case "" + STATE_INIT + ":" + STATE_READY:
           this.generateBoard();
-          this._lastTime = (new Date()).getTime();
-          window.setInterval((function(_this) {
-            return function() {
-              return _this.onTick();
-            };
-          })(this), 1000 / FPS);
+          this._lastTime = performance.now();
+          requestAnimationFrame(this.onTick);
           break;
         case "" + STATE_READY + ":" + STATE_GAME:
           this.generateBoard();
@@ -185,7 +183,7 @@
           this._spriteList = [];
           break;
         case "" + STATE_GAME + ":" + STATE_END:
-          this._gameEnd = (new Date()).getTime();
+          this._gameEnd = performance.now();
           this._spriteList = [];
           break;
         case "" + STATE_END + ":" + STATE_READY:
@@ -321,7 +319,7 @@
           }
           break;
         case STATE_END:
-          now = (new Date()).getTime();
+          now = performance.now();
           deltaTime = (now - this._gameEnd) * 0.001;
           if (1 < deltaTime) {
             this.setState(STATE_READY);
