@@ -1,12 +1,12 @@
 /*!
  * color-tiles-remake - Remake of GameSaien's Color Tiles
- * @version v0.1.1
- * @date Sat, 29 Mar 2014 01:44:23 GMT
+ * @version v0.1.2
+ * @date Sun, 30 Mar 2014 13:23:46 GMT
  * @link https://execjosh.github.io/color-tiles-remake/build/
  * @license ISC
  */
 (function() {
-  var BLOCKS_HIGH, BLOCKS_WIDE, BLOCK_SIZE, COLOR_TABLE, COUNTDOWN_PENALTY, DT, FPS, LEVEL_TIME, MARGIN_BOTTOM, MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, STATE_END, STATE_GAME, STATE_INIT, STATE_NULL, STATE_READY, log,
+  var BLOCKS_HIGH, BLOCKS_WIDE, BLOCK_SIZE, COLOR_TABLE, COUNTDOWN_PENALTY, DT, FPS, LEVEL_TIME, MARGIN_BOTTOM, MARGIN_LEFT, MARGIN_RIGHT, MARGIN_TOP, MOUSE_ALPHA_VELOCITY, STATE_END, STATE_GAME, STATE_INIT, STATE_NULL, STATE_READY, log,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   STATE_NULL = 'null';
@@ -43,6 +43,8 @@
 
   BLOCKS_HIGH = 15;
 
+  MOUSE_ALPHA_VELOCITY = 3;
+
   log = function() {
     return console.log.apply(console, arguments);
   };
@@ -50,7 +52,7 @@
   this.Application = (function() {
     function Application() {
       this.onTick = __bind(this.onTick, this);
-      this._version = '0.1.1';
+      this._version = '0.1.2';
       this._state = STATE_NULL;
       this._ctx = null;
       this._w = 1;
@@ -63,6 +65,9 @@
       this._mouseY = 0;
       this._clickX = 0;
       this._clickY = 0;
+      this._mouseAlpha = 1.0;
+      this._lastIX = 0;
+      this._lastIY = 0;
       this._board = [];
       this._countDown = 0;
       this._score = 0;
@@ -145,8 +150,16 @@
     };
 
     Application.prototype.onMouseMove = function(x, y) {
+      var ix, iy;
       this._mouseX = x;
       this._mouseY = y;
+      ix = this.x2index(this._mouseX);
+      iy = this.y2index(this._mouseY);
+      if (!(this._lastIX === ix && this._lastIY === iy)) {
+        this._mouseAlpha = 1.0;
+      }
+      this._lastIX = ix;
+      this._lastIY = iy;
     };
 
     Application.prototype.onTick = function(now) {
@@ -334,6 +347,7 @@
         return;
       }
       this._countDown -= dt;
+      this._mouseAlpha = Math.max(0, this._mouseAlpha - (MOUSE_ALPHA_VELOCITY * dt));
       if (0 >= this._countDown) {
         this.setState(STATE_END);
       }
@@ -420,10 +434,10 @@
         if ((MARGIN_LEFT + BLOCK_SIZE <= (_ref = this._mouseX) && _ref < this._w - MARGIN_RIGHT - BLOCK_SIZE) && (MARGIN_TOP + BLOCK_SIZE <= (_ref1 = this._mouseY) && _ref1 < this._h - MARGIN_BOTTOM - BLOCK_SIZE)) {
           ix = this.x2index(this._mouseX);
           iy = this.y2index(this._mouseY);
-          if (this._board[iy][ix] == null) {
+          if ((this._board[iy][ix] == null) && this._mouseAlpha > 0) {
             x = MARGIN_LEFT + BLOCK_SIZE + (ix * BLOCK_SIZE);
             y = MARGIN_TOP + BLOCK_SIZE + (iy * BLOCK_SIZE);
-            c.fillStyle = '#CCC';
+            c.fillStyle = "rgba(204,204,204," + this._mouseAlpha + ")";
             c.fillRect(x + 1, y + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
           }
         }
