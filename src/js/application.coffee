@@ -31,6 +31,8 @@ BLOCK_SIZE = 25 # px
 BLOCKS_WIDE = 23
 BLOCKS_HIGH = 15
 
+MOUSE_ALPHA_VELOCITY = 3
+
 log = ->
   console.log.apply console, arguments
 
@@ -54,6 +56,9 @@ class @Application
     @_mouseY = 0
     @_clickX = 0
     @_clickY = 0
+    @_mouseAlpha = 1.0
+    @_lastIX = 0
+    @_lastIY = 0
 
     @_board = []
 
@@ -128,6 +133,15 @@ class @Application
   onMouseMove: (x, y) ->
     @_mouseX = x
     @_mouseY = y
+
+    ix = @x2index @_mouseX
+    iy = @y2index @_mouseY
+
+    unless @_lastIX is ix and @_lastIY is iy
+      @_mouseAlpha = 1.0
+
+    @_lastIX = ix
+    @_lastIY = iy
 
     return  # void
 
@@ -314,6 +328,8 @@ class @Application
 
     @_countDown -= dt
 
+    @_mouseAlpha = Math.max 0, @_mouseAlpha - (MOUSE_ALPHA_VELOCITY * dt)
+
     if 0 >= @_countDown
       @setState STATE_END
 
@@ -405,11 +421,10 @@ class @Application
         ix = @x2index @_mouseX
         iy = @y2index @_mouseY
 
-        unless @_board[iy][ix]?
+        if not @_board[iy][ix]? and @_mouseAlpha > 0
           x = MARGIN_LEFT + BLOCK_SIZE + (ix * BLOCK_SIZE)
           y = MARGIN_TOP + BLOCK_SIZE + (iy * BLOCK_SIZE)
-
-          c.fillStyle = '#CCC'
+          c.fillStyle = "rgba(204,204,204,#{@_mouseAlpha})"
           c.fillRect x + 1, y + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2
 
       # Draw count-down
